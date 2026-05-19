@@ -468,6 +468,70 @@ body::before{
 @keyframes notifIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .notif.error{border-color:var(--danger);color:#e08080;}
 
+/* ── PASSCODE SCREEN ────────────────────────────────────── */
+.passcode-screen{
+  position:fixed;inset:0;z-index:999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+}
+.passcode-card{
+  max-width:400px;width:100%;
+  background:var(--surface);
+  border:1px solid var(--border);border-radius:8px;
+  padding:48px 40px;text-align:center;
+}
+.passcode-logo{
+  font-family:'Playfair Display',serif;
+  font-size:22px;font-weight:400;
+  color:var(--text);margin-bottom:4px;
+}
+.passcode-logo span{color:var(--accent);}
+.passcode-sub{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  letter-spacing:0.15em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:36px;
+}
+.passcode-label{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:10px;display:block;
+  text-align:left;
+}
+.passcode-input{
+  width:100%;padding:14px 16px;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:var(--r);color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:15px;
+  letter-spacing:0.1em;text-align:center;
+  outline:none;transition:border-color 0.2s;margin-bottom:14px;
+}
+.passcode-input:focus{border-color:var(--accent);}
+.passcode-input.shake{animation:shake 0.4s ease;}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-8px)}
+  40%{transform:translateX(8px)}
+  60%{transform:translateX(-5px)}
+  80%{transform:translateX(5px)}
+}
+.passcode-btn{
+  width:100%;padding:14px;
+  background:var(--accent);border:none;border-radius:var(--r);
+  color:#000;font-family:'JetBrains Mono',monospace;
+  font-size:11px;letter-spacing:0.15em;text-transform:uppercase;
+  font-weight:700;cursor:pointer;transition:all 0.2s;
+}
+.passcode-btn:hover{background:#5ab87c;}
+.passcode-error{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:var(--danger);letter-spacing:0.08em;
+  margin-top:10px;min-height:16px;
+}
+.passcode-hint{
+  font-size:12px;color:var(--text3);margin-top:20px;line-height:1.6;
+}
+
 /* ── RESPONSIVE ─────────────────────────────────────────── */
 @media(max-width:768px){
   .sidebar{display:none;}
@@ -477,7 +541,28 @@ body::before{
 </style>
 </head>
 <body>
-<div class="app" id="app">
+
+<!-- PASSCODE SCREEN -->
+<div class="passcode-screen" id="passcodeScreen">
+  <div class="passcode-card">
+    <div class="passcode-logo">Psychodynamic <span>Trainer</span></div>
+    <div class="passcode-sub">PGY-3 Clinical Training &middot; Restricted Access</div>
+    <label class="passcode-label">Access Passcode</label>
+    <input
+      class="passcode-input"
+      type="password"
+      id="passcodeInput"
+      placeholder="Enter passcode"
+      autocomplete="off"
+      onkeydown="if(event.key==='Enter')checkPasscode()"
+    >
+    <button class="passcode-btn" onclick="checkPasscode()">Enter &rarr;</button>
+    <div class="passcode-error" id="passcodeError"></div>
+    <div class="passcode-hint">For access, contact your programme coordinator.</div>
+  </div>
+</div>
+
+<div class="app" id="app" style="display:none">
 
   <!-- ══════════════════════════════════════════════════════
        HEADER
@@ -630,7 +715,29 @@ body::before{
 // ══════════════════════════════════════════════════════════
 // DATA
 // ══════════════════════════════════════════════════════════
-const API_KEY = 'YOUR_API_KEY_HERE'; // Replace with your Anthropic API key
+const API_KEY = 'YOUR_API_KEY_HERE';
+const PASSCODE = 'VignetteDuke123';
+
+// ── PASSCODE CHECK ────────────────────────────────────────
+function checkPasscode() {
+  const input = document.getElementById('passcodeInput');
+  const error = document.getElementById('passcodeError');
+  if (input.value === PASSCODE) {
+    document.getElementById('passcodeScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    // auto-focus the first interaction
+    setTimeout(() => {
+      const k = document.getElementById('apiKeyInput');
+      if (k) k.focus();
+    }, 200);
+  } else {
+    error.textContent = 'Incorrect passcode. Please try again.';
+    input.classList.add('shake');
+    input.value = '';
+    setTimeout(() => input.classList.remove('shake'), 400);
+    setTimeout(() => { error.textContent = ''; }, 3000);
+  }
+} // Replace with your Anthropic API key
 
 const SESSIONS = [
   {
