@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Psychodynamic Clinical Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@300;400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & TOKENS ─────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f0e;
+  --surface:#131715;
+  --surface2:#1a1e1c;
+  --surface3:#212622;
+  --border:#2a302c;
+  --border2:#333a35;
+  --text:#e8ede9;
+  --text2:#9daa9f;
+  --text3:#5a6b5c;
+  --accent:#4a9e6b;
+  --accent2:#3a7d54;
+  --accent-glow:rgba(74,158,107,0.15);
+  --patient:#c8a96e;
+  --patient-bg:rgba(200,169,110,0.08);
+  --supervisor:#7eb4d4;
+  --supervisor-bg:rgba(126,180,212,0.08);
+  --therapist:#4a9e6b;
+  --therapist-bg:rgba(74,158,107,0.08);
+  --danger:#c06060;
+  --warning:#c8a96e;
+  --r:4px;
+}
+
+body{
+  font-family:'Lato',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* subtle grid texture */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(74,158,107,0.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(74,158,107,0.02) 1px,transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;z-index:0;
+}
+
+/* ── LAYOUT ─────────────────────────────────────────────── */
+.app{position:relative;z-index:1;display:flex;flex-direction:column;min-height:100vh;}
+
+/* ── HEADER ─────────────────────────────────────────────── */
+.header{
+  padding:20px 32px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:20px;
+  background:rgba(13,15,14,0.95);
+  backdrop-filter:blur(10px);
+  position:sticky;top:0;z-index:100;
+}
+.logo{
+  font-family:'Playfair Display',serif;
+  font-size:18px;font-weight:400;
+  color:var(--text);letter-spacing:0.01em;
+}
+.logo span{color:var(--accent);}
+.header-meta{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;color:var(--text3);
+  letter-spacing:0.1em;text-transform:uppercase;
+  margin-left:auto;
+}
+.mode-pill{
+  display:flex;border:1px solid var(--border2);border-radius:20px;overflow:hidden;
+}
+.mode-pill button{
+  padding:6px 16px;font-family:'JetBrains Mono',monospace;
+  font-size:10px;letter-spacing:0.1em;text-transform:uppercase;
+  background:none;border:none;cursor:pointer;color:var(--text3);
+  transition:all 0.2s;
+}
+.mode-pill button.active{background:var(--accent);color:#000;font-weight:700;}
+
+/* ── SETUP SCREEN ───────────────────────────────────────── */
+.setup-screen{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  padding:40px 20px;
+}
+.setup-card{
+  max-width:560px;width:100%;
+  background:var(--surface);
+  border:1px solid var(--border);border-radius:8px;
+  padding:48px;
+}
+.setup-eyebrow{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:12px;
+}
+.setup-title{
+  font-family:'Playfair Display',serif;font-size:32px;
+  font-weight:400;line-height:1.2;margin-bottom:8px;
+}
+.setup-title em{font-style:italic;color:var(--accent);}
+.setup-sub{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:36px;}
+
+.setup-label{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:8px;display:block;
+}
+.session-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:28px;
+}
+.session-card{
+  padding:14px 16px;background:var(--surface2);
+  border:1px solid var(--border);border-radius:var(--r);
+  cursor:pointer;transition:all 0.18s;text-align:left;
+}
+.session-card:hover{border-color:var(--accent);background:var(--accent-glow);}
+.session-card.selected{border-color:var(--accent);background:var(--accent-glow);}
+.sc-num{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:0.1em;margin-bottom:4px;}
+.sc-title{font-size:12px;color:var(--text);line-height:1.4;}
+
+.api-row{margin-bottom:24px;}
+.api-input{
+  width:100%;padding:12px 16px;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:var(--r);color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  outline:none;transition:border-color 0.2s;
+}
+.api-input:focus{border-color:var(--accent);}
+.api-input::placeholder{color:var(--text3);}
+
+.start-btn{
+  width:100%;padding:16px;
+  background:var(--accent);border:none;border-radius:var(--r);
+  color:#000;font-family:'JetBrains Mono',monospace;
+  font-size:12px;letter-spacing:0.15em;text-transform:uppercase;
+  font-weight:700;cursor:pointer;transition:all 0.2s;
+}
+.start-btn:hover{background:#5ab87c;transform:translateY(-1px);}
+.start-btn:disabled{background:var(--surface3);color:var(--text3);cursor:not-allowed;transform:none;}
+
+/* ── MAIN TRAINER ───────────────────────────────────────── */
+.trainer{flex:1;display:flex;height:calc(100vh - 65px);}
+
+/* SIDEBAR */
+.sidebar{
+  width:240px;flex-shrink:0;
+  border-right:1px solid var(--border);
+  background:var(--surface);
+  display:flex;flex-direction:column;
+  overflow-y:auto;
+}
+.sidebar-section{padding:16px;}
+.sidebar-label{
+  font-family:'JetBrains Mono',monospace;font-size:8px;
+  letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:10px;
+}
+.vignette-info{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--r);padding:14px;margin-bottom:12px;
+}
+.vi-session{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  color:var(--accent);letter-spacing:0.1em;margin-bottom:6px;
+}
+.vi-title{font-family:'Playfair Display',serif;font-size:14px;line-height:1.4;margin-bottom:6px;}
+.vi-focus{font-size:11px;color:var(--text2);line-height:1.5;font-style:italic;}
+
+.exchange-counter{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--r);padding:12px;margin-bottom:12px;
+  text-align:center;
+}
+.ec-num{
+  font-family:'Playfair Display',serif;font-size:36px;
+  color:var(--accent);line-height:1;
+}
+.ec-label{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;margin-top:4px;
+}
+.ec-max{font-size:11px;color:var(--text3);margin-top:2px;}
+
+.sidebar-btn-group{display:flex;flex-direction:column;gap:6px;}
+.sb-btn{
+  padding:9px 12px;background:none;border:1px solid var(--border);
+  border-radius:var(--r);color:var(--text2);
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  letter-spacing:0.1em;text-transform:uppercase;
+  cursor:pointer;transition:all 0.18s;text-align:left;
+}
+.sb-btn:hover{border-color:var(--accent);color:var(--accent);}
+.sb-btn.danger{border-color:var(--danger);color:var(--danger);}
+.sb-btn.danger:hover{background:rgba(192,96,96,0.1);}
+
+.debrief-qs{margin-top:12px;}
+.dq-item{
+  font-size:11px;color:var(--text2);line-height:1.6;
+  padding:8px 0;border-bottom:1px solid var(--border);
+}
+.dq-item:last-child{border-bottom:none;}
+.dq-item::before{content:'— ';color:var(--text3);}
+
+/* MAIN AREA */
+.main-area{flex:1;display:flex;flex-direction:column;min-width:0;}
+
+/* Vignette Banner */
+.vignette-banner{
+  padding:20px 28px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+}
+.vb-label{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  letter-spacing:0.15em;text-transform:uppercase;
+  color:var(--patient);margin-bottom:8px;
+}
+.vb-text{
+  font-family:'Playfair Display',serif;font-size:16px;
+  line-height:1.75;color:var(--text);font-weight:400;
+}
+.vb-text strong{font-weight:500;color:var(--patient);}
+
+/* CHAT */
+.chat-area{
+  flex:1;overflow-y:auto;padding:24px 28px;
+  display:flex;flex-direction:column;gap:16px;
+}
+.chat-area::-webkit-scrollbar{width:4px;}
+.chat-area::-webkit-scrollbar-track{background:var(--surface);}
+.chat-area::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+.msg{display:flex;flex-direction:column;gap:6px;animation:msgIn 0.3s ease;}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.msg-role{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  letter-spacing:0.15em;text-transform:uppercase;
+  display:flex;align-items:center;gap:8px;
+}
+.msg-role .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.role-patient .dot{background:var(--patient);}
+.role-patient .role-name{color:var(--patient);}
+.role-supervisor .dot{background:var(--supervisor);}
+.role-supervisor .role-name{color:var(--supervisor);}
+.role-therapist .dot{background:var(--therapist);}
+.role-therapist .role-name{color:var(--therapist);}
+
+.msg-bubble{
+  padding:14px 18px;border-radius:var(--r);
+  font-size:14px;line-height:1.75;
+  border:1px solid transparent;
+}
+.role-patient .msg-bubble{background:var(--patient-bg);border-color:rgba(200,169,110,0.15);}
+.role-supervisor .msg-bubble{background:var(--supervisor-bg);border-color:rgba(126,180,212,0.15);}
+.role-therapist .msg-bubble{background:var(--therapist-bg);border-color:rgba(74,158,107,0.15);}
+
+/* Score card */
+.score-card{
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:6px;padding:20px 24px;
+  animation:msgIn 0.4s ease;
+}
+.score-header{
+  display:flex;align-items:center;gap:16px;margin-bottom:16px;
+}
+.score-big{
+  font-family:'Playfair Display',serif;font-size:48px;
+  font-weight:400;line-height:1;
+}
+.score-big.high{color:var(--accent);}
+.score-big.mid{color:var(--warning);}
+.score-big.low{color:var(--danger);}
+.score-meta{flex:1;}
+.score-title{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  letter-spacing:0.15em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:4px;
+}
+.score-session{font-size:14px;color:var(--text);}
+.score-dims{display:flex;flex-direction:column;gap:8px;}
+.dim-row{display:flex;align-items:center;gap:10px;}
+.dim-label{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  color:var(--text3);width:160px;flex-shrink:0;
+  letter-spacing:0.05em;
+}
+.dim-bar{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.dim-fill{height:100%;border-radius:2px;transition:width 0.8s cubic-bezier(0.4,0,0.2,1);}
+.dim-fill.high{background:var(--accent);}
+.dim-fill.mid{background:var(--warning);}
+.dim-fill.low{background:var(--danger);}
+.dim-score{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:var(--text2);width:28px;text-align:right;
+}
+.score-commentary{
+  margin-top:14px;padding-top:14px;
+  border-top:1px solid var(--border);
+  font-size:13px;line-height:1.7;color:var(--text2);
+  font-family:'Playfair Display',serif;font-size:15px;
+}
+
+/* Thinking indicator */
+.thinking{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 16px;
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:var(--text3);letter-spacing:0.1em;
+}
+.thinking-dots span{
+  display:inline-block;width:4px;height:4px;border-radius:50%;
+  background:var(--text3);margin:0 2px;
+  animation:blink 1.2s infinite;
+}
+.thinking-dots span:nth-child(2){animation-delay:0.2s;}
+.thinking-dots span:nth-child(3){animation-delay:0.4s;}
+@keyframes blink{0%,80%,100%{opacity:0.2}40%{opacity:1}}
+
+/* ── INPUT AREA ─────────────────────────────────────────── */
+.input-area{
+  padding:20px 28px;
+  border-top:1px solid var(--border);
+  background:var(--surface);
+}
+
+/* GUIDED MODE */
+.guided-options{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.guide-opt{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:12px 16px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--r);cursor:pointer;text-align:left;
+  transition:all 0.16s;font-family:inherit;
+}
+.guide-opt:hover:not(:disabled){border-color:var(--accent);background:var(--accent-glow);}
+.guide-opt:disabled{cursor:default;}
+.go-letter{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:var(--text3);min-width:16px;margin-top:2px;
+}
+.go-text{font-size:13px;color:var(--text);line-height:1.55;}
+.guide-opt.sel-correct{background:rgba(74,158,107,0.12);border-color:var(--accent);}
+.guide-opt.sel-correct .go-letter{color:var(--accent);}
+.guide-opt.sel-wrong{background:rgba(192,96,96,0.1);border-color:var(--danger);}
+.guide-opt.sel-wrong .go-letter{color:var(--danger);}
+.guide-opt.sel-partial{background:rgba(200,169,110,0.1);border-color:var(--warning);}
+.guide-opt.sel-partial .go-letter{color:var(--warning);}
+.guide-opt.rev-correct{background:rgba(74,158,107,0.06);border-color:rgba(74,158,107,0.4);opacity:0.7;}
+
+.guided-feedback{
+  padding:12px 16px;border-radius:var(--r);
+  border-left:3px solid;margin-bottom:12px;
+  font-size:13px;line-height:1.65;
+  display:none;animation:msgIn 0.25s ease;
+}
+.guided-feedback.correct{background:rgba(74,158,107,0.08);border-color:var(--accent);color:var(--accent);}
+.guided-feedback.wrong{background:rgba(192,96,96,0.08);border-color:var(--danger);color:#e08080;}
+.guided-feedback.partial{background:rgba(200,169,110,0.08);border-color:var(--warning);color:var(--warning);}
+.gf-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:5px;opacity:0.8;}
+.gf-text{font-family:'Playfair Display',serif;font-size:15px;}
+
+/* OPEN MODE input */
+.open-input-wrap{
+  display:flex;flex-direction:column;gap:10px;
+}
+.textarea-row{display:flex;gap:10px;align-items:flex-end;}
+.intervention-textarea{
+  flex:1;min-height:80px;max-height:180px;
+  padding:14px 16px;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:var(--r);color:var(--text);
+  font-family:'Lato',sans-serif;font-size:14px;line-height:1.6;
+  outline:none;resize:none;transition:border-color 0.2s;
+}
+.intervention-textarea:focus{border-color:var(--accent);}
+.intervention-textarea::placeholder{color:var(--text3);}
+
+.voice-btn{
+  width:48px;height:48px;flex-shrink:0;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:var(--r);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;color:var(--text2);font-size:20px;
+}
+.voice-btn:hover{border-color:var(--accent);color:var(--accent);}
+.voice-btn.recording{
+  background:rgba(192,96,96,0.15);border-color:var(--danger);
+  color:var(--danger);animation:pulse 1s infinite;
+}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(192,96,96,0.4)}50%{box-shadow:0 0 0 6px rgba(192,96,96,0)}}
+
+.send-btn{
+  padding:0 24px;height:48px;
+  background:var(--accent);border:none;border-radius:var(--r);
+  color:#000;font-family:'JetBrains Mono',monospace;
+  font-size:10px;letter-spacing:0.15em;text-transform:uppercase;
+  font-weight:700;cursor:pointer;transition:all 0.18s;flex-shrink:0;
+}
+.send-btn:hover:not(:disabled){background:#5ab87c;}
+.send-btn:disabled{background:var(--surface3);color:var(--text3);cursor:not-allowed;}
+
+.voice-status{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:var(--danger);letter-spacing:0.1em;
+  display:none;align-items:center;gap:6px;
+}
+.voice-status.active{display:flex;}
+.vs-dot{width:6px;height:6px;border-radius:50%;background:var(--danger);animation:pulse-dot 1s infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.3}}
+
+.input-hint{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  color:var(--text3);letter-spacing:0.08em;
+  display:flex;justify-content:space-between;
+}
+
+/* ── GUIDED Q NAVIGATOR ─────────────────────────────────── */
+.q-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0;border-top:1px solid var(--border);margin-top:10px;
+}
+.q-nav-info{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:var(--text3);letter-spacing:0.08em;
+}
+.q-nav-btn{
+  padding:6px 14px;background:none;border:1px solid var(--border2);
+  border-radius:var(--r);color:var(--text2);
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  letter-spacing:0.1em;text-transform:uppercase;
+  cursor:pointer;transition:all 0.15s;
+}
+.q-nav-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent);}
+.q-nav-btn:disabled{opacity:0.3;cursor:not-allowed;}
+
+/* ── EMPTY STATE ────────────────────────────────────────── */
+.empty-state{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:12px;color:var(--text3);
+  font-family:'Playfair Display',serif;
+  font-size:18px;font-style:italic;
+  text-align:center;padding:40px;
+}
+.empty-state svg{opacity:0.2;}
+
+/* ── NOTIFICATIONS ──────────────────────────────────────── */
+.notif{
+  position:fixed;bottom:24px;right:24px;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:var(--r);padding:12px 18px;
+  font-size:13px;color:var(--text);
+  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+  animation:notifIn 0.3s ease;z-index:999;
+  max-width:320px;
+}
+@keyframes notifIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.notif.error{border-color:var(--danger);color:#e08080;}
+
+/* ── RESPONSIVE ─────────────────────────────────────────── */
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .header{padding:14px 16px;}
+  .vignette-banner,.chat-area,.input-area{padding-left:16px;padding-right:16px;}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ══════════════════════════════════════════════════════
+       HEADER
+  ══════════════════════════════════════════════════════ -->
+  <header class="header">
+    <div class="logo">Psychodynamic <span>Trainer</span></div>
+    <div id="modePill" class="mode-pill" style="display:none">
+      <button id="btnGuided" class="active" onclick="setMode('guided')">Guided</button>
+      <button id="btnOpen" onclick="setMode('open')">Open</button>
+    </div>
+    <div class="header-meta" id="headerMeta">PGY-3 Clinical Training · Version 4</div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════
+       SETUP SCREEN
+  ══════════════════════════════════════════════════════ -->
+  <div class="setup-screen" id="setupScreen">
+    <div class="setup-card">
+      <div class="setup-eyebrow">PGY-3 Psychodynamic Training · Version 4</div>
+      <h1 class="setup-title">Clinical <em>Vignette</em> Trainer</h1>
+      <p class="setup-sub">Select a session, choose your mode, and begin. In <strong>Guided mode</strong> you select from curated options and receive immediate feedback. In <strong>Open mode</strong> you speak or type your own interventions — an AI patient responds in real time and a supervisor scores each exchange.</p>
+
+      <label class="setup-label">Select Session</label>
+      <div class="session-grid" id="sessionGrid">
+        <button class="session-card selected" onclick="selectSession(0)" id="sc-0">
+          <div class="sc-num">Session 01</div>
+          <div class="sc-title">The Frame &amp; Therapeutic Stance</div>
+        </button>
+        <button class="session-card" onclick="selectSession(1)" id="sc-1">
+          <div class="sc-num">Session 02</div>
+          <div class="sc-title">Free Association &amp; Listening</div>
+        </button>
+      </div>
+
+      <div class="api-row">
+        <label class="setup-label">Anthropic API Key (for Open Mode)</label>
+        <input class="api-input" type="password" id="apiKeyInput"
+          placeholder="sk-ant-api03-..." autocomplete="off">
+      </div>
+
+      <button class="start-btn" id="startBtn" onclick="startTrainer()">Begin Session →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       TRAINER
+  ══════════════════════════════════════════════════════ -->
+  <div class="trainer" id="trainerScreen" style="display:none">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Current Session</div>
+        <div class="vignette-info">
+          <div class="vi-session" id="sbSession"></div>
+          <div class="vi-title" id="sbTitle"></div>
+          <div class="vi-focus" id="sbFocus"></div>
+        </div>
+
+        <div id="exchangeCounterWrap" style="display:none">
+          <div class="exchange-counter">
+            <div class="ec-num" id="ecNum">0</div>
+            <div class="ec-label">Exchanges</div>
+            <div class="ec-max" id="ecMax">Score after 4</div>
+          </div>
+        </div>
+
+        <div class="sidebar-btn-group">
+          <button class="sb-btn" onclick="goSetup()">← Change Session</button>
+          <button class="sb-btn" onclick="resetSession()">↺ Restart</button>
+          <button class="sb-btn danger" onclick="clearChat()">✕ Clear Chat</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section" style="flex:1;overflow-y:auto">
+        <div class="sidebar-label">Debrief Questions</div>
+        <div class="debrief-qs" id="debriefQs"></div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main-area">
+
+      <!-- Vignette banner -->
+      <div class="vignette-banner">
+        <div class="vb-label">Clinical Vignette</div>
+        <div class="vb-text" id="vignetteText"></div>
+      </div>
+
+      <!-- Chat -->
+      <div class="chat-area" id="chatArea">
+        <div class="empty-state" id="emptyState">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          <div>The session is ready.<br>Your first intervention awaits.</div>
+        </div>
+      </div>
+
+      <!-- Input area -->
+      <div class="input-area" id="inputArea">
+
+        <!-- GUIDED MODE -->
+        <div id="guidedUI">
+          <div class="guided-options" id="guidedOptions"></div>
+          <div class="guided-feedback" id="guidedFeedback">
+            <div class="gf-label" id="gfLabel"></div>
+            <div class="gf-text" id="gfText"></div>
+          </div>
+          <div class="q-nav">
+            <div class="q-nav-info" id="qNavInfo">Question 1 of 3</div>
+            <div style="display:flex;gap:8px">
+              <button class="q-nav-btn" id="prevQBtn" onclick="prevQ()" disabled>← Prev</button>
+              <button class="q-nav-btn" id="nextQBtn" onclick="nextQ()">Next →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- OPEN MODE -->
+        <div id="openUI" style="display:none">
+          <div class="open-input-wrap">
+            <div class="textarea-row">
+              <textarea
+                class="intervention-textarea"
+                id="interventionInput"
+                placeholder="Type your intervention here — or click the microphone to dictate…"
+                onkeydown="handleKey(event)"
+              ></textarea>
+              <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()" title="Voice dictation">🎤</button>
+              <button class="send-btn" id="sendBtn" onclick="sendIntervention()">Send</button>
+            </div>
+            <div class="voice-status" id="voiceStatus">
+              <span class="vs-dot"></span>
+              <span>Listening… speak your intervention</span>
+            </div>
+            <div class="input-hint">
+              <span>Enter to send · Shift+Enter for new line</span>
+              <span id="exchangeHint"></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+// ══════════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════════
+const API_KEY = 'YOUR_API_KEY_HERE'; // Replace with your Anthropic API key
+
+const SESSIONS = [
+  {
+    id:'s1',
+    num:'Session 01',
+    title:'The Frame & Therapeutic Stance',
+    focus:'Establishing and holding the frame; neutrality, abstinence, anonymity in modern practice.',
+    vignette:'Marcus, 34, an engineer, arrives five minutes late to his second session. He drops his bag, scans the room, and within minutes says: <strong>"Do you have kids? And how long have you been doing this?"</strong> His tone is casual but his eyes watch you carefully for your reaction.',
+    patientName:'Marcus',
+    patientProfile:`You are Marcus, 34, an engineer in your second therapy session. You are anxious about being here and manage situations by taking charge. You arrived a few minutes late and asked the therapist personal questions about whether they have children and how long they've been practising.
+
+RESPONSE RULES:
+- If the therapist answers your personal questions directly: become more controlling and dismissive, test further
+- If the therapist gently declines while staying curious: become briefly irritated, then a little more genuine
+- If the therapist is cold or cites rules: become more guarded and slightly contemptuous
+- If the therapist stays warm and curious without answering: soften slightly, begin to reveal something real
+- Stay in character as Marcus throughout — speak as he would, with his speech patterns
+- Keep responses to 2-4 sentences`,
+    supervisorContext:`This is a psychodynamic therapy training session. The trainee is working with Marcus, a 34-year-old engineer who is testing the frame by asking personal questions. 
+
+Key learning objectives:
+1. Holding the frame (not answering personal questions) while remaining warm
+2. Turning personal questions into clinical material
+3. Avoiding both rigidity (citing rules) and accommodation (answering)
+4. The ideal response uses curiosity rather than refusal: "I wonder what it would mean to you..."
+
+Rate each intervention on: Frame-holding, Warmth, Clinical Curiosity, Avoiding Premature Interpretation, Alliance-building.`,
+    debrief:[
+      'What did the therapist do that held the frame? What language was used?',
+      'Where did warmth and the frame come into tension? How was it navigated?',
+      'What might Marcus\'s questions be communicating beyond their surface content?',
+      'What would you do differently next time?'
+    ],
+    questions:[
+      {
+        text:'Marcus asks whether you have children. Which response best holds the frame while remaining warm?',
+        options:[
+          {l:'A',t:'"I do have children, yes. Why do you ask?"'},
+          {l:'B',t:'"That\'s something I don\'t discuss. Let\'s focus on you."'},
+          {l:'C',t:'"I notice you\'re curious about me — I wonder what it would mean to you, one way or the other."'},
+          {l:'D',t:'"I don\'t answer personal questions in therapy. It\'s part of how this works."'},
+        ],
+        correct:'C',
+        fb:{
+          correct:{l:'Best Response',t:'This holds the frame beautifully — it neither answers nor refuses harshly. By turning curiosity back to Marcus, the question becomes clinical material. Warmth and frame coexist.'},
+          A:{l:'Breaks the Frame',t:'Answering forfeits the frame entirely. With a patient who manages anxiety through control, compliance may actually increase his anxiety and close off the richer question of what he was really asking.'},
+          B:{l:'Too Abrupt',t:'"Let\'s focus on you" is correct in intent but brittle in delivery — it can land as dismissive or scripted. The frame can be held with far more warmth than this.'},
+          D:{l:'Too Rigid',t:'Citing rules distances you from the patient and feels bureaucratic rather than therapeutic. The frame is best held through relational warmth, not policy statements.'},
+        }
+      },
+      {
+        text:'You decline to answer and Marcus becomes briefly irritated: "It\'s just a question — I\'m not asking anything weird." What is the most therapeutically useful response?',
+        options:[
+          {l:'A',t:'"You\'re right — I apologise for making it awkward."'},
+          {l:'B',t:'"The irritation makes sense. I didn\'t answer straightforwardly, and that can feel dismissive. I\'m more interested in what\'s underneath the question than in keeping you at arm\'s length."'},
+          {l:'C',t:'"You seem angry. Can we explore that anger?"'},
+          {l:'D',t:'"It\'s not weird at all. I just think those questions often carry something more — would you be curious about that?"'},
+        ],
+        correct:'B',
+        fb:{
+          correct:{l:'Best Response',t:'This does three things: acknowledges his irritation as legitimate, takes mild ownership without capitulating, and invites him into the deeper material. Warmth and curiosity are in balance.'},
+          A:{l:'Over-Apologetic',t:'Apologising for holding the frame undermines it. Capitulation often increases a controlling patient\'s anxiety rather than reducing it.'},
+          C:{l:'Too Direct',t:'Naming the anger at this moment is premature. The irritation has not fully formed — better to create space for it than to label it.'},
+          D:{l:'Reasonable, But…',t:'This invites curiosity about what the question carries. However it skips over the irritation entirely, and that missed moment may subtly communicate that his uncomfortable feelings aren\'t welcome.'},
+        }
+      },
+      {
+        text:'Marcus settles slightly and says: "I guess I like to know who I\'m dealing with." Which response best uses this opening?',
+        options:[
+          {l:'A',t:'"That makes a lot of sense. I wonder if that\'s something you find yourself doing in other situations too — needing to size things up before you can settle in."'},
+          {l:'B',t:'"Completely understandable. Here are a few things about me that might help you feel more comfortable…"'},
+          {l:'C',t:'"I think that may be related to what you said last week about trusting people."'},
+          {l:'D',t:'"What would it mean to you to feel like you knew who you were dealing with?"'},
+        ],
+        correct:'A',
+        fb:{
+          correct:{l:'Best Response',t:'This takes his own words and follows them into his wider relational world. It\'s exploratory rather than interpretive, linking without prescribing. Delivered warmly, it opens the session into genuine work.'},
+          B:{l:'Breaks the Frame',t:'Sharing personal information forecloses the therapeutic process — you\'d be solving the surface problem rather than exploring what\'s beneath it.'},
+          C:{l:'Premature',t:'Reaching back to last week in only the second session can feel like a move to display competence rather than genuine curiosity.'},
+          D:{l:'Good, Not Quite Best',t:'Genuinely curious and open. Option A is preferable because it uses his own words and opens naturally into a relational pattern rather than staying abstract.'},
+        }
+      }
+    ]
+  },
+  {
+    id:'s2',
+    num:'Session 02',
+    title:'Free Association & Listening',
+    focus:'Inviting free association; tracking thematic drift; tolerating silence.',
+    vignette:'Priya, 28, a graduate student, settles into her chair. You invite her to say what comes to mind without editing. She begins: <strong>"A novel I\'m reading — it\'s about a woman who disappears — my mother used to disappear when she was angry, not literally — actually this room is colder than last week—"</strong> She stops and looks at you: <em>"Sorry, this is probably all over the place."</em>',
+    patientName:'Priya',
+    patientProfile:`You are Priya, 28, a graduate student in your fourth therapy session. You are articulate and verbal but tend to edit yourself. You have just free-associated from a novel you're reading, to a memory about your mother, to an observation about the room temperature, and then apologised.
+
+RESPONSE RULES:
+- If the therapist follows your associations curiously without redirecting: let yourself deepen and continue associating
+- If the therapist summarises or redirects to one topic: become more abstract and surface-level
+- If the therapist stays with silence well: let something more genuine emerge
+- At one point, hit a sudden silence and try to change the subject — see what the therapist does
+- If the therapist confronts you about avoidance: become slightly defensive
+- Keep responses to 2-4 sentences, in Priya's voice`,
+    supervisorContext:`This is a psychodynamic therapy training session. The trainee is working with Priya, 28, a graduate student who has been invited to free-associate. She has just produced a chain of associations (novel → disappearing mother → cold room) and apologised.
+
+Key learning objectives:
+1. Responding to free association without redirecting or summarising
+2. Tolerating silence — the silence is the patient working
+3. Following the patient's drift rather than directing to specific content
+4. The ideal response to the apology: reassure briefly then let her continue ("It isn't all over the place at all — just stay with wherever you are")
+5. When she tries to change the subject: note it gently rather than following or confronting
+
+Rate each intervention on: Following vs. Directing, Tolerance of Silence/Ambiguity, Frame of Free Association, Alliance, Timing.`,
+    debrief:[
+      'Where did the resident\'s listening allow Priya to deepen?',
+      'Where did intervention close the associative process down?',
+      'What was the patient moving toward? What was being defended against?',
+      'How did the resident handle silence and the topic-change?'
+    ],
+    questions:[
+      {
+        text:'Priya has offered a chain of associations and then apologised. What is the best response?',
+        options:[
+          {l:'A',t:'"Don\'t worry — so it sounds like your relationship with your mother may be important. Can you tell me more about that?"'},
+          {l:'B',t:'"I notice you moved from the novel, to your mother, to the room — I wonder what connects those things."'},
+          {l:'C',t:'"It isn\'t all over the place at all. That\'s exactly it — just stay with wherever you are."'},
+          {l:'D',t:'"You mentioned your mother going somewhere else when she was angry. What was that like for you?"'},
+        ],
+        correct:'C',
+        fb:{
+          correct:{l:'Best Response',t:'Reassuring Priya without redirecting keeps the process alive. "Just stay with wherever you are" continues the invitation rather than interrupting it. The apology is heard and gently set aside.'},
+          A:{l:'Redirects',t:'"Can you tell me more about that?" redirects to a specific topic and effectively ends free association. It names a theme before the patient has arrived there herself.'},
+          B:{l:'Too Soon',t:'Naming the connections between novel, mother, and room is intellectually interesting — but offered at this point it causes the patient to comply rather than deepen.'},
+          D:{l:'Skips the Process',t:'Picking one thread shuts down the associative process and turns the session into a more conventional, directed interview.'},
+        }
+      },
+      {
+        text:'Priya hits a sudden silence and says: "Actually — I think I wanted to talk about my dissertation instead." How do you respond?',
+        options:[
+          {l:'A',t:'"Of course — what\'s happening with the dissertation?"'},
+          {l:'B',t:'"I\'m happy to go there — though I noticed the shift. Something came up and then you moved away from it."'},
+          {l:'C',t:'(Pause, sitting with the silence.) "I noticed you stopped. Stay here for a moment — what just came up?"'},
+          {l:'D',t:'"I think you\'re avoiding something. The dissertation can wait."'},
+        ],
+        correct:'C',
+        fb:{
+          correct:{l:'Best Response',t:'Tolerating the silence and returning Priya to what just happened keeps the associative process active. "What just came up?" is simple, open, and doesn\'t pre-load an answer.'},
+          A:{l:'Follows the Avoidance',t:'Accepting the topic-change misses a significant moment. Priya has just moved away from something — following her creates collusion with the avoidance.'},
+          B:{l:'Good, But…',t:'Naming the shift is more active than following the topic-change. The hesitation ("I\'m happy to go there") slightly undercuts the observation.'},
+          D:{l:'Too Confrontational',t:'"You\'re avoiding something" can feel like an accusation and is likely to produce defence rather than exploration.'},
+        }
+      },
+      {
+        text:'After a full minute of silence Priya says: "I keep thinking about whether my mother knows I\'m in therapy." What do you do?',
+        options:[
+          {l:'A',t:'"Does she? Have you told her?"'},
+          {l:'B',t:'"That feels like it connects to what you said earlier — there seems to be a theme about knowing and not knowing."'},
+          {l:'C',t:'(Quietly.) "What\'s the thought like — imagining her knowing?"'},
+          {l:'D',t:'"Say more about that."'},
+        ],
+        correct:'C',
+        fb:{
+          correct:{l:'Best Response',t:'Following the association into the patient\'s felt experience — "what\'s the thought like" — continues the free-associative process without directing it. The quiet tone matches the fragility of the moment.'},
+          A:{l:'Literal',t:'Asking whether she\'s told her mother pulls the conversation out of the internal world and into the external one.'},
+          B:{l:'Premature Synthesis',t:'Connecting the "knowing and not knowing" theme is astute — but offered at this point it can land as the therapist showing their work rather than accompanying the patient.'},
+          D:{l:'Acceptable',t:'"Say more about that" is unobtrusive. Option C is preferable because it follows the patient\'s experience more specifically.'},
+        }
+      }
+    ]
+  }
+];
+
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let currentSession = 0;
+let currentMode = 'guided'; // 'guided' | 'open'
+let currentQ = 0;
+let guidedAnswered = []; // per question answered state
+let chatHistory = []; // {role:'patient'|'supervisor'|'therapist', text}
+let exchangeCount = 0;
+let maxExchanges = 4;
+let isLoading = false;
+let mediaRecognition = null;
+let isRecording = false;
+let apiKey = API_KEY;
+
+// ══════════════════════════════════════════════════════════
+// SETUP
+// ══════════════════════════════════════════════════════════
+function selectSession(idx) {
+  currentSession = idx;
+  document.querySelectorAll('.session-card').forEach((c,i) => {
+    c.classList.toggle('selected', i === idx);
+  });
+}
+
+function startTrainer() {
+  const keyInput = document.getElementById('apiKeyInput').value.trim();
+  if (keyInput) apiKey = keyInput;
+
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('trainerScreen').style.display = 'flex';
+  document.getElementById('modePill').style.display = 'flex';
+
+  initSession();
+}
+
+function goSetup() {
+  document.getElementById('trainerScreen').style.display = 'none';
+  document.getElementById('setupScreen').style.display = 'flex';
+  document.getElementById('modePill').style.display = 'none';
+}
+
+function initSession() {
+  const s = SESSIONS[currentSession];
+  currentQ = 0;
+  guidedAnswered = new Array(s.questions.length).fill(null);
+  chatHistory = [];
+  exchangeCount = 0;
+
+  // Sidebar
+  document.getElementById('sbSession').textContent = s.num;
+  document.getElementById('sbTitle').textContent = s.title;
+  document.getElementById('sbFocus').textContent = s.focus;
+
+  // Debrief
+  const dq = document.getElementById('debriefQs');
+  dq.innerHTML = s.debrief.map(q => `<div class="dq-item">${q}</div>`).join('');
+
+  // Vignette
+  document.getElementById('vignetteText').innerHTML = s.vignette;
+
+  // Chat
+  clearChatUI();
+
+  // Mode UI
+  setMode(currentMode, true);
+}
+
+function resetSession() {
+  initSession();
+}
+
+function clearChat() {
+  chatHistory = [];
+  exchangeCount = 0;
+  clearChatUI();
+  if (currentMode === 'open') {
+    updateExchangeCounter();
+  }
+}
+
+function clearChatUI() {
+  const ca = document.getElementById('chatArea');
+  ca.innerHTML = '<div class="empty-state" id="emptyState"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><div>The session is ready.<br>Your first intervention awaits.</div></div>';
+}
+
+// ══════════════════════════════════════════════════════════
+// MODE SWITCHING
+// ══════════════════════════════════════════════════════════
+function setMode(mode, force=false) {
+  if (mode === currentMode && !force) return;
+  currentMode = mode;
+
+  document.getElementById('btnGuided').classList.toggle('active', mode==='guided');
+  document.getElementById('btnOpen').classList.toggle('active', mode==='open');
+
+  document.getElementById('guidedUI').style.display = mode==='guided' ? 'block' : 'none';
+  document.getElementById('openUI').style.display = mode==='open' ? 'block' : 'none';
+  document.getElementById('exchangeCounterWrap').style.display = mode==='open' ? 'block' : 'none';
+
+  if (mode === 'guided') renderGuidedQ();
+  if (mode === 'open') updateExchangeCounter();
+}
+
+// ══════════════════════════════════════════════════════════
+// GUIDED MODE
+// ══════════════════════════════════════════════════════════
+function renderGuidedQ() {
+  const s = SESSIONS[currentSession];
+  const q = s.questions[currentQ];
+  const answered = guidedAnswered[currentQ];
+
+  // Options
+  const container = document.getElementById('guidedOptions');
+  container.innerHTML = q.options.map(opt => {
+    let cls = '';
+    if (answered) {
+      if (opt.l === answered.chosen) {
+        cls = answered.type === 'correct' ? 'sel-correct' : (answered.type === 'partial' ? 'sel-partial' : 'sel-wrong');
+      } else if (opt.l === q.correct && answered.chosen !== q.correct) {
+        cls = 'rev-correct';
+      }
+    }
+    return `<button class="guide-opt ${cls}" onclick="selectGuided('${opt.l}')" ${answered ? 'disabled' : ''}>
+      <span class="go-letter">${opt.l}</span>
+      <span class="go-text">${opt.t}</span>
+    </button>`;
+  }).join('');
+
+  // Feedback
+  const fb = document.getElementById('guidedFeedback');
+  if (answered) {
+    const fbData = answered.chosen === q.correct ? q.fb.correct : (q.fb[answered.chosen] || q.fb.correct);
+    const cls = answered.type;
+    fb.className = `guided-feedback ${cls}`;
+    document.getElementById('gfLabel').textContent = fbData.l;
+    document.getElementById('gfText').textContent = fbData.t;
+    fb.style.display = 'block';
+  } else {
+    fb.style.display = 'none';
+  }
+
+  // Nav
+  document.getElementById('qNavInfo').textContent = `Question ${currentQ+1} of ${s.questions.length}`;
+  document.getElementById('prevQBtn').disabled = currentQ === 0;
+  document.getElementById('nextQBtn').disabled = currentQ === s.questions.length - 1;
+}
+
+function selectGuided(letter) {
+  if (guidedAnswered[currentQ]) return;
+  const s = SESSIONS[currentSession];
+  const q = s.questions[currentQ];
+
+  // Determine type — for simplicity: correct / partial (D often) / wrong
+  let type = 'wrong';
+  if (letter === q.correct) type = 'correct';
+  else if (q.fb[letter] && (q.fb[letter].l.includes('Reasonable') || q.fb[letter].l.includes('Good') || q.fb[letter].l.includes('Acceptable') || q.fb[letter].l.includes('Decent') || q.fb[letter].l.includes('Valid') || q.fb[letter].l.includes('Close'))) type = 'partial';
+
+  guidedAnswered[currentQ] = {chosen: letter, type};
+
+  // Add to chat as therapist message
+  const opt = q.options.find(o => o.l === letter);
+  addMsg('therapist', `[Q${currentQ+1}] ${opt.t}`);
+
+  renderGuidedQ();
+  scrollChat();
+}
+
+function prevQ() { if (currentQ > 0) { currentQ--; renderGuidedQ(); } }
+function nextQ() {
+  const s = SESSIONS[currentSession];
+  if (currentQ < s.questions.length - 1) { currentQ++; renderGuidedQ(); }
+}
+
+// ══════════════════════════════════════════════════════════
+// OPEN MODE — SEND INTERVENTION
+// ══════════════════════════════════════════════════════════
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendIntervention();
+  }
+}
+
+async function sendIntervention() {
+  const input = document.getElementById('interventionInput');
+  const text = input.value.trim();
+  if (!text || isLoading) return;
+
+  const effectiveKey = document.getElementById('apiKeyInput').value.trim() || apiKey;
+  if (!effectiveKey || effectiveKey === 'YOUR_API_KEY_HERE') {
+    showNotif('Please enter your Anthropic API key in the setup screen.', true);
+    return;
+  }
+
+  input.value = '';
+  removeEmpty();
+  addMsg('therapist', text);
+  exchangeCount++;
+  updateExchangeCounter();
+  isLoading = true;
+  setSendDisabled(true);
+
+  const s = SESSIONS[currentSession];
+
+  // Show patient thinking
+  const patientThinkId = showThinking(`${s.patientName} is responding…`);
+
+  try {
+    // 1. Get patient response
+    const patientResp = await callClaude(effectiveKey, buildPatientMessages(s, text));
+    removeThinking(patientThinkId);
+    addMsg('patient', patientResp);
+
+    // 2. Get supervisor comment
+    const supThinkId = showThinking('Supervisor is reviewing…');
+    const supResp = await callClaude(effectiveKey, buildSupervisorMessages(s, text, patientResp));
+    removeThinking(supThinkId);
+    addMsg('supervisor', supResp);
+
+    // 3. Score after max exchanges
+    if (exchangeCount >= maxExchanges) {
+      const scoreThinkId = showThinking('Generating session score…');
+      const scoreResp = await callClaude(effectiveKey, buildScoreMessages(s));
+      removeThinking(scoreThinkId);
+      renderScore(scoreResp);
+      exchangeCount = 0;
+      updateExchangeCounter();
+    }
+
+  } catch (err) {
+    removeThinking(patientThinkId);
+    showNotif(`API error: ${err.message}`, true);
+    console.error(err);
+  }
+
+  isLoading = false;
+  setSendDisabled(false);
+  scrollChat();
+}
+
+// ══════════════════════════════════════════════════════════
+// API CALLS
+// ══════════════════════════════════════════════════════════
+async function callClaude(key, messages) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  return data.content.map(b => b.text || '').join('').trim();
+}
+
+function buildPatientMessages(s, therapistText) {
+  // Build conversation context
+  const history = chatHistory.slice(-10); // last 10 msgs for context
+  let context = `VIGNETTE CONTEXT:\n${s.vignette.replace(/<[^>]+>/g,'')}\n\n`;
+  context += `PATIENT INSTRUCTIONS:\n${s.patientProfile}\n\n`;
+  context += `CONVERSATION SO FAR:\n`;
+  history.forEach(m => {
+    if (m.role === 'therapist') context += `Therapist: ${m.text}\n`;
+    else if (m.role === 'patient') context += `${s.patientName}: ${m.text}\n`;
+  });
+  context += `\nThe therapist has just said: "${therapistText}"\n\nRespond as ${s.patientName}. Stay in character. 2-4 sentences.`;
+
+  return [{ role: 'user', content: context }];
+}
+
+function buildSupervisorMessages(s, therapistText, patientResponse) {
+  const history = chatHistory.slice(-12);
+  let context = `You are an experienced psychodynamic psychotherapy supervisor providing real-time feedback to a trainee (PGY-3 resident).\n\n`;
+  context += `SESSION CONTEXT:\n${s.supervisorContext}\n\n`;
+  context += `VIGNETTE: ${s.vignette.replace(/<[^>]+>/g,'')}\n\n`;
+  context += `RECENT EXCHANGE:\n`;
+  history.forEach(m => {
+    if (m.role === 'therapist') context += `Trainee: ${m.text}\n`;
+    else if (m.role === 'patient') context += `Patient (${s.patientName}): ${m.text}\n`;
+  });
+  context += `\nTrainee just said: "${therapistText}"\n`;
+  context += `Patient responded: "${patientResponse}"\n\n`;
+  context += `Provide brief, specific supervisory feedback (3-5 sentences). Note what was effective, what could be refined, and one concrete suggestion. Be direct but collegial — like a good supervisor, not a judge. Do not score here — just comment.`;
+
+  return [{ role: 'user', content: context }];
+}
+
+function buildScoreMessages(s) {
+  const history = chatHistory.slice(-24);
+  let context = `You are an experienced psychodynamic psychotherapy supervisor. You have observed a full set of exchanges between a trainee and a simulated patient. Provide a structured score and commentary.\n\n`;
+  context += `SESSION: ${s.num} — ${s.title}\n`;
+  context += `LEARNING OBJECTIVES:\n${s.supervisorContext}\n\n`;
+  context += `FULL EXCHANGE:\n`;
+  history.forEach(m => {
+    if (m.role === 'therapist') context += `Trainee: ${m.text}\n`;
+    else if (m.role === 'patient') context += `Patient: ${m.text}\n`;
+    else if (m.role === 'supervisor') context += `[Supervisor noted: ${m.text}]\n`;
+  });
+  context += `\nProvide a JSON score object ONLY — no other text, no markdown fences. Format exactly:\n`;
+  context += `{"overall":75,"dimensions":{"Frame-Holding":80,"Warmth":70,"Clinical Curiosity":75,"Timing":65,"Alliance":80},"commentary":"2-3 sentence overall assessment of the trainee's work across the session."}`;
+  context += `\nScores are 0-100. Be honest and calibrated — a solid performance is 65-75, excellent is 80+.`;
+
+  return [{ role: 'user', content: context }];
+}
+
+// ══════════════════════════════════════════════════════════
+// VOICE DICTATION
+// ══════════════════════════════════════════════════════════
+function toggleVoice() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    showNotif('Voice dictation is not supported in this browser. Try Chrome.', true);
+    return;
+  }
+
+  if (isRecording) {
+    stopVoice();
+  } else {
+    startVoice();
+  }
+}
+
+function startVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  mediaRecognition = new SR();
+  mediaRecognition.continuous = true;
+  mediaRecognition.interimResults = true;
+  mediaRecognition.lang = 'en-GB';
+
+  const input = document.getElementById('interventionInput');
+
+  mediaRecognition.onresult = (e) => {
+    let transcript = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      transcript += e.results[i][0].transcript;
+    }
+    input.value = transcript;
+  };
+
+  mediaRecognition.onerror = () => stopVoice();
+  mediaRecognition.onend = () => stopVoice();
+
+  mediaRecognition.start();
+  isRecording = true;
+  document.getElementById('voiceBtn').classList.add('recording');
+  document.getElementById('voiceBtn').textContent = '⏹';
+  document.getElementById('voiceStatus').classList.add('active');
+}
+
+function stopVoice() {
+  if (mediaRecognition) { mediaRecognition.stop(); mediaRecognition = null; }
+  isRecording = false;
+  document.getElementById('voiceBtn').classList.remove('recording');
+  document.getElementById('voiceBtn').textContent = '🎤';
+  document.getElementById('voiceStatus').classList.remove('active');
+}
+
+// ══════════════════════════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════════════════════════
+function addMsg(role, text) {
+  chatHistory.push({role, text});
+  const roleLabels = {patient:'Patient', supervisor:'Supervisor', therapist:'You (Trainee)'};
+  const div = document.createElement('div');
+  div.className = `msg role-${role}`;
+  div.innerHTML = `
+    <div class="msg-role">
+      <span class="dot"></span>
+      <span class="role-name">${roleLabels[role]}</span>
+    </div>
+    <div class="msg-bubble">${escHtml(text)}</div>
+  `;
+  document.getElementById('chatArea').appendChild(div);
+  scrollChat();
+}
+
+function showThinking(label) {
+  const id = 'think-' + Date.now();
+  const div = document.createElement('div');
+  div.className = 'thinking';
+  div.id = id;
+  div.innerHTML = `<span>${label}</span><span class="thinking-dots"><span></span><span></span><span></span></span>`;
+  document.getElementById('chatArea').appendChild(div);
+  scrollChat();
+  return id;
+}
+
+function removeThinking(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+function renderScore(rawJson) {
+  let data;
+  try {
+    const clean = rawJson.replace(/```json|```/g,'').trim();
+    data = JSON.parse(clean);
+  } catch {
+    addMsg('supervisor', rawJson);
+    return;
+  }
+
+  const overall = data.overall || 0;
+  const scoreClass = overall >= 75 ? 'high' : overall >= 55 ? 'mid' : 'low';
+
+  const dims = data.dimensions || {};
+  const dimHtml = Object.entries(dims).map(([k,v]) => {
+    const dc = v >= 75 ? 'high' : v >= 55 ? 'mid' : 'low';
+    return `<div class="dim-row">
+      <span class="dim-label">${k}</span>
+      <div class="dim-bar"><div class="dim-fill ${dc}" style="width:${v}%"></div></div>
+      <span class="dim-score">${v}</span>
+    </div>`;
+  }).join('');
+
+  const div = document.createElement('div');
+  div.className = 'score-card';
+  div.innerHTML = `
+    <div class="score-header">
+      <div class="score-big ${scoreClass}">${overall}%</div>
+      <div class="score-meta">
+        <div class="score-title">Session Score · ${SESSIONS[currentSession].num}</div>
+        <div class="score-session">${SESSIONS[currentSession].title}</div>
+      </div>
+    </div>
+    <div class="score-dims">${dimHtml}</div>
+    <div class="score-commentary">${escHtml(data.commentary || '')}</div>
+  `;
+  document.getElementById('chatArea').appendChild(div);
+
+  // Animate bars
+  setTimeout(() => {
+    div.querySelectorAll('.dim-fill').forEach(b => {
+      const w = b.style.width;
+      b.style.width = '0%';
+      setTimeout(() => b.style.width = w, 50);
+    });
+  }, 100);
+
+  scrollChat();
+}
+
+function updateExchangeCounter() {
+  document.getElementById('ecNum').textContent = exchangeCount;
+  document.getElementById('ecMax').textContent = `Score after ${maxExchanges}`;
+  document.getElementById('exchangeHint').textContent = `${exchangeCount}/${maxExchanges} exchanges`;
+}
+
+function removeEmpty() {
+  const e = document.getElementById('emptyState');
+  if (e) e.remove();
+}
+
+function scrollChat() {
+  const ca = document.getElementById('chatArea');
+  ca.scrollTop = ca.scrollHeight;
+}
+
+function setSendDisabled(v) {
+  document.getElementById('sendBtn').disabled = v;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
+}
+
+function showNotif(msg, isErr=false) {
+  const el = document.createElement('div');
+  el.className = 'notif' + (isErr ? ' error' : '');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+</script>
+</body>
+</html>
